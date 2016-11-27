@@ -8,7 +8,6 @@
 #define SYM_EIGS_SOLVER_H
 
 #include <Eigen/Core>
-#include <Eigen/Eigenvalues>
 #include <vector>     // std::vector
 #include <cmath>      // std::abs, std::pow
 #include <algorithm>  // std::min, std::copy
@@ -162,7 +161,6 @@ private:
     typedef Eigen::Array<bool, Eigen::Dynamic, 1> BoolArray;
     typedef Eigen::Map<Matrix> MapMat;
     typedef Eigen::Map<Vector> MapVec;
-    typedef Eigen::SelfAdjointEigenSolver<Matrix> EigenSolver;
 
 protected:
     OpType* m_op;            // object to conduct matrix operation,
@@ -351,6 +349,9 @@ private:
             nev_new = m_ncv / 2;
         else if(nev_new == 1 && m_ncv > 2)
             nev_new = 2;
+
+        if(nev_new > m_ncv - 1)
+            nev_new = m_ncv - 1;
 
         return nev_new;
     }

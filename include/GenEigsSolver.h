@@ -258,17 +258,11 @@ private:
         }
     }
 
-    static bool is_complex(Complex v, Scalar eps)
-    {
-        using std::abs;
-        return abs(v.imag()) > eps;
-    }
-
-    static bool is_conj(Complex v1, Complex v2, Scalar eps)
-    {
-        using std::abs;
-        return abs(v1 - Eigen::numext::conj(v2)) < eps;
-    }
+    // Real Ritz values calculated from UpperHessenbergEigen have exact zero imaginary part
+    // Complex Ritz values have exact conjugate pairs
+    // So we use exact tests here
+    static bool is_complex(const Complex& v) { return v.imag() != Scalar(0); }
+    static bool is_conj(const Complex& v1, const Complex& v2) { return v1 == Eigen::numext::conj(v2); }
 
     // Implicitly restarted Arnoldi factorization
     void restart(int k)
@@ -284,7 +278,7 @@ private:
 
         for(int i = k; i < m_ncv; i++)
         {
-            if(is_complex(m_ritz_val[i], m_approx_0) && is_conj(m_ritz_val[i], m_ritz_val[i + 1], m_approx_0))
+            if(is_complex(m_ritz_val[i]) && is_conj(m_ritz_val[i], m_ritz_val[i + 1]))
             {
                 // H - mu * I = Q1 * R1
                 // H <- R1 * Q1 + mu * I = Q1' * H * Q1
@@ -369,9 +363,10 @@ private:
         if(nev_new > m_ncv - 2)
             nev_new = m_ncv - 2;
 
-        // Examine conjugate pairs again
-        if(is_complex(m_ritz_val[nev_new - 1], m_approx_0) &&
-           is_conj(m_ritz_val[nev_new - 1], m_ritz_val[nev_new], m_approx_0))
+        // Increase nev by one if ritz_val[nev - 1] and
+        // ritz_val[nev] are conjugate pairs
+        if(is_complex(m_ritz_val[nev_new - 1]) &&
+           is_conj(m_ritz_val[nev_new - 1], m_ritz_val[nev_new]))
         {
             nev_new++;
         }
